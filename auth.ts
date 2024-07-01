@@ -1,6 +1,5 @@
 import { Lucia } from "lucia";
 import { D1Adapter } from "@lucia-auth/adapter-sqlite";
-import { GitHub } from "arctic";
 import { Google } from "arctic";
 
 
@@ -36,9 +35,6 @@ export function initializeLucia(D1: D1Database) {
         }
     });
 }
-
-// Github provider from Arctic
-export const github = new GitHub(process.env.GITHUB_CLIENT_ID!, process.env.GITHUB_CLIENT_SECRET!);
 
 const clientId = process.env.GOOGLE_CLIENT_ID!;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
