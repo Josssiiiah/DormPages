@@ -16,7 +16,7 @@
     "db:sql": "drizzle-kit generate:sqlite --out ./app/drizzle/sql --schema ./app/drizzle/schema.server.ts",
     "db:migrate:local": "pnpm run drizzle:update && npx wrangler d1 migrations apply db --local",
     "db:migrate": "pnpm run drizzle:update && npx wrangler d1 migrations apply db --remote",
-    "fmt": "prettier --write \"app/**/*.{tsx,ts,css}\" \"drizzle/**/*.ts\""
+    "fmt": "prettier --write \"app/**/*.{tsx,ts}\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.556.0",

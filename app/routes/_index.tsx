@@ -3,29 +3,58 @@ import { Link } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 
+// Images
+import profile from "/profile.png";
+import explore from "/explore.png";
+import create from "/create.png";
+
 export default function Index() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center p-4">
-      <div className="w-full max-w-8xl space-y-6 py-40">
-        <div className="text-center">
-          <h1 className="text-8xl font-bold mb-2">
-            Connecting the Stanford gig economy.
-          </h1>
-          <p className="text-gray-600">
-            Discover or create opportunities within Stanford's network of
-            talented students
-          </p>
-        </div>
+      <div className="w-full max-w-8xl flex justify-between items-center mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold">DormPages</h1>
+        <Button variant="ghost">Log in</Button>
       </div>
-      <div className="w-full max-w-md space-y-6">
-        <div className="absolute top-4 right-4">
-          <Button variant="ghost">Log in</Button>
-        </div>
 
+      <div className="w-full max-w-8xl text-center space-y-6 sm:pt-20">
+        <h1 className="text-4xl sm:text-6xl font-bold">
+          Connecting the Stanford gig economy.
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-2xl">
+          Discover or create opportunities within Stanford's network of talented
+          students
+        </p>
+      </div>
+
+      <div className="w-full max-w-md pt-10">
         <div className="flex items-center space-x-2">
           <Input type="email" placeholder="Email" className="flex-grow" />
           <Button>Join Waitlist!</Button>
         </div>
+      </div>
+
+      <div className="w-full max-w-4xl flex justify-center pt-20">
+        <img
+          src={profile}
+          alt="profile"
+          className="w-full h-auto object-cover rounded-lg shadow-lg"
+        />
+      </div>
+
+      <div className="w-full max-w-4xl flex justify-center pt-20 sm:pt-40">
+        <img
+          src={explore}
+          alt="explore"
+          className="w-full h-auto object-cover rounded-lg shadow-lg"
+        />
+      </div>
+
+      <div className="w-full max-w-4xl flex justify-center pt-20 sm:pt-40">
+        <img
+          src={create}
+          alt="create"
+          className="w-full h-auto border sm:border-2 border-black object-cover rounded-lg shadow-lg"
+        />
       </div>
     </div>
   );
