@@ -4,5 +4,5 @@ node_modules
 /build
 .env
 
-.wrangler
-.worker-configuration.d
+.wrangler.toml
+.worker-configuration.d.ts
