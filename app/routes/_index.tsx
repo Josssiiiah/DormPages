@@ -18,33 +18,33 @@ export default function Index() {
 
       <div className="w-full max-w-8xl text-center space-y-6 sm:pt-20">
         <h1 className="text-4xl sm:text-6xl font-bold">
-          Connecting the Stanford gig economy.
+          Step into the Stanford gig economy.
         </h1>
         <p className="text-gray-600 text-sm sm:text-2xl">
-          Discover or create opportunities within Stanford's network of talented
-          students
+          Discover student-led small businesses, from haircuts, to photography and everything in between
         </p>
       </div>
 
-      <div className="w-full max-w-md pt-10">
+      <div className="w-full max-w-lg pt-10">
         <div className="flex items-center space-x-2">
-          <Input type="email" placeholder="Email" className="flex-grow" />
-          <Button>Join Waitlist!</Button>
+          <Input type="email" placeholder="Email" className="sm:h-12 w-[400px] text-lg" />
+          <Button className="sm:h-12 text-lg">Join Waitlist!</Button>
         </div>
       </div>
 
       <div className="w-full max-w-4xl flex justify-center pt-20">
         <img
-          src={profile}
-          alt="profile"
+         src={explore}
+          alt="explore"
           className="w-full h-auto object-cover rounded-lg shadow-lg"
         />
       </div>
 
       <div className="w-full max-w-4xl flex justify-center pt-20 sm:pt-40">
         <img
-          src={explore}
-          alt="explore"
+         
+            src={profile}
+          alt="profile"
           className="w-full h-auto object-cover rounded-lg shadow-lg"
         />
       </div>
