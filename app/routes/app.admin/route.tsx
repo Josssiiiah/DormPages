@@ -1,23 +1,35 @@
-import { Form, useActionData, useNavigation } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useNavigation,
+  useSubmit,
+} from "@remix-run/react";
 import {
   json,
-  unstable_parseMultipartFormData,
-  unstable_createMemoryUploadHandler,
 } from "@remix-run/cloudflare";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import React, { useEffect, useState } from "react";
 import {
   S3Client,
-  ListObjectsV2Command,
-  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
+import { readFile } from "fs/promises";
 
 import { useToast } from "~/components/ui/use-toast";
-import { doTheDbThing } from "lib/dbThing";
 import { drizzle } from "drizzle-orm/d1";
 import { owners } from "app/drizzle/schema.server";
+import path from "path";
+
+interface ServiceCardProps {
+  title: string;
+  description?: string;
+  rating?: number;
+  image?: string;
+  id?: string;
+}
+
+interface ServiceData extends ServiceCardProps {}
 
 const S3 = new S3Client({
   region: "auto",
@@ -28,6 +40,35 @@ const S3 = new S3Client({
       "b3c68d4ced82ad17a964d22648266c0a0b6fc55d0cf8b5f775e1183b4616b065",
   },
 });
+
+async function getFileFromPath(filePath: any) {
+  const buffer = await readFile(filePath);
+  const fileName = path.basename(filePath);
+  return new File([buffer], fileName, { type: "image/png" });
+}
+
+const servicesData: ServiceData[] = [
+  {
+    title: "West Campus Cuts",
+    image: "./public/west.png",
+  },
+  {
+    title: "Done by Des",
+    image: "./public/des.png",
+  },
+  {
+    title: "Nails by Ari",
+    image: "./public/nails.png",
+  },
+  {
+    title: "SenayDani.img",
+    image: "./public/senay.png",
+  },
+  {
+    title: "NyahWitDaNikon",
+    image: "./public/nyah.png",
+  },
+];
 
 // Function to generate a unique name for the photo
 const generateUniqueFileName = (originalName: string) => {
@@ -40,6 +81,7 @@ export default function Admin() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const { toast } = useToast();
+  const submit = useSubmit();
 
   const [fileName, setFileName] = useState<string>("");
   const [formData, setFormData] = useState({
@@ -47,6 +89,12 @@ export default function Admin() {
     category: "",
     description: "",
   });
+  const handleSeed = () => {
+    submit({ action: "seed" }, { method: "post" });
+  };
+  const handleClear = () => {
+    submit({ action: "clear" }, { method: "post" });
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -63,12 +111,12 @@ export default function Admin() {
   // Show toast notifications based on action data
   useEffect(() => {
     if (actionData) {
-      if (actionData.status === 201) {
+      if ("status" in actionData && actionData.status === 201) {
         toast({
           title: "Success",
           description: actionData.message,
         });
-      } else if (actionData.status === 500) {
+      } else if ("status" in actionData && actionData.status === 500) {
         toast({
           title: "Error",
           description: actionData.message,
@@ -175,8 +223,12 @@ export default function Admin() {
           {navigation.state === "submitting" ? "Uploading..." : "Upload"}
         </Button>
       </Form>
-      <Button>Seed</Button>
-      <Button>Delete</Button>
+      <Button onClick={handleSeed} className="mt-4 w-full">
+        Seed
+      </Button>
+      <Button onClick={handleClear} className="mt-4 w-full">
+        Clear
+      </Button>
     </div>
   );
 }
@@ -185,8 +237,87 @@ export const action = async ({ request, context }: any) => {
   const db = drizzle(context.cloudflare.env.DB);
   const formData = await request.formData();
 
-  const name = formData.get("name");
+  if (formData.get("action") === "seed") {
+    try {
+      for (const service of servicesData) {
+        const file = await getFileFromPath(service.image);
+        // Generate a unique filename
+        let fileName = generateUniqueFileName(file.name);
+        let imageUrl = `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com/who-profile-pictures/${fileName}`;
+
+        if (file instanceof File) {
+          const fileStream = file.stream();
+          const fileType = file.type;
+          const fileSize = file.size;
+
+          // Validate file size and type
+          const maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
+          if (fileSize > maxFileSizeInBytes) {
+            throw new Error("File size exceeds the allowed limit");
+          }
+
+          if (
+            !["image/jpeg", "image/png", "application/pdf"].includes(fileType)
+          ) {
+            throw new Error("Unsupported file type");
+          }
+
+          const upload = new Upload({
+            client: S3,
+            params: {
+              Bucket: "who-profile-pictures",
+              Key: fileName as string,
+              Body: fileStream,
+              ContentType: fileType,
+            },
+            queueSize: 6,
+          });
+
+          upload.on("httpUploadProgress", (progress) => {
+            console.log(progress);
+          });
+
+          console.log("Before");
+          await upload.done();
+          console.log("Upload complete");
+        }
+
+        await db
+          .insert(owners)
+          .values({
+            name: service.title,
+            image_url: imageUrl,
+            // Add other fields as necessary
+          })
+          .execute();
+      }
+      return json(
+        { message: "Database seeded successfully", status: 201 },
+        { status: 201 }
+      );
+    } catch (error) {
+      console.error("Failed to seed database", error);
+      return json(
+        { message: "Failed to seed database", status: 500 },
+        { status: 500 }
+      );
+    }
+  }
+
+  // Check if the clear action has been triggered
+  if (formData.get("action") === "clear") {
+    // Perform database clear operation
+    console.log("deleting database sensei...");
+    await db.delete(owners);
+
+    console.log("Database cleared");
+    return json({ message: "Database cleared" }, { status: 200 });
+  }
+
   const fileName = formData.get("fileName");
+  const imageUrl = `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com/who-profile-pictures/${fileName}`;
+
+  const name = formData.get("name");
   const file = formData.get("image");
   const description = formData.get("description");
 
@@ -231,8 +362,6 @@ export const action = async ({ request, context }: any) => {
         { status: 500 }
       );
     }
-
-    const imageUrl = `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com/who-profile-pictures/${fileName}`;
 
     await db
       .insert(owners)

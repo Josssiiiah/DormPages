@@ -193,7 +193,7 @@ export default function Explore() {
               key={owner.id}
               title={owner.name}
               image={owner.signedImageUrl || owner.image_url || undefined}
-              id={owner.id.toString()}
+              id={owner.name}
             />
           ))}
         </div>
