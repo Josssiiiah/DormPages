@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -9,6 +9,11 @@ import explore from "/explore.png";
 import create from "/create.png";
 
 export default function Index() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/app/explore`);
+  };
   return (
     <div className="min-h-screen bg-white flex flex-col items-center p-4">
       <div className="w-full max-w-8xl flex justify-between items-center mb-8">
@@ -21,20 +26,27 @@ export default function Index() {
           Step into the Stanford gig economy.
         </h1>
         <p className="text-gray-600 text-sm sm:text-2xl">
-          Discover student-led small businesses, from haircuts, to photography and everything in between
+          Discover student-led small businesses, from haircuts, to photography
+          and everything in between
         </p>
       </div>
 
       <div className="w-full max-w-lg pt-10">
         <div className="flex items-center space-x-2">
-          <Input type="email" placeholder="Email" className="sm:h-12 w-[400px] text-lg" />
-          <Button className="sm:h-12 text-lg">Join Waitlist!</Button>
+          <Input
+            type="email"
+            placeholder="Email"
+            className="sm:h-12 w-[400px] text-lg"
+          />
+          <Button className="sm:h-12 text-lg" onClick={handleClick}>
+            Join Waitlist!
+          </Button>
         </div>
       </div>
 
       <div className="w-full max-w-4xl flex justify-center pt-20">
         <img
-         src={explore}
+          src={explore}
           alt="explore"
           className="w-full h-auto object-cover rounded-lg shadow-lg"
         />
@@ -42,8 +54,7 @@ export default function Index() {
 
       <div className="w-full max-w-4xl flex justify-center pt-20 sm:pt-40">
         <img
-         
-            src={profile}
+          src={profile}
           alt="profile"
           className="w-full h-auto object-cover rounded-lg shadow-lg"
         />

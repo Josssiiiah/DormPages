@@ -1,27 +1,32 @@
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
+import { Button } from "~/components/ui/button";
 
 export function Navbar({ user }: any) {
-  console.log("user", user);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/app/admin`);
+  };
   return (
     <div className="flex flex-row justify-between pt-8 w-full">
       <Link to="/">
-        <h2 className="font-bold text-lg">Peer Profiles</h2>
+        <h2 className="font-bold text-lg">DormPages</h2>
       </Link>{" "}
-      <div>
+      <div className="space-x-4">
+        <Button
+          onClick={handleClick}
+          className="px-4 py-4 rounded bg-black text-white font-medium hover:bg-g-600"
+        >
+          Create a profile
+        </Button>
         {user ? (
-          <Link
-            to="/logout"
-            className="px-4 py-2 rounded bg-red-500 text-white font-medium hover:bg-red-600"
-          >
+          <Button className="px-4 py-4 rounded bg-red-500 text-white font-medium hover:bg-red-600">
             Logout
-          </Link>
+          </Button>
         ) : (
-          <Link
-            to="/login"
-            className="px-4 py-2 rounded bg-black text-white font-medium hover:bg-blue-600"
-          >
+          <Button className="px-4 py-4 rounded bg-black text-white font-medium hover:bg-blue-600">
             Login
-          </Link>
+          </Button>
         )}
       </div>
       {/* <div>

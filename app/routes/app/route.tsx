@@ -3,7 +3,7 @@ import {
   json,
   LoaderFunctionArgs,
 } from "@remix-run/cloudflare";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, Outlet, useLoaderData } from "@remix-run/react";
 import { drizzle } from "drizzle-orm/d1";
 import { resources } from "app/drizzle/schema.server";
 
@@ -15,6 +15,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { doTheAuthThing } from "lib/authThing";
+import { Navbar } from "./navbar";
 
 const S3 = new S3Client({
   region: "auto",
@@ -69,19 +70,21 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
   console.log(await S3.send(new ListObjectsV2Command({ Bucket: "artworks" })));
   return json({
+    user,
     resourceList,
     imageList: imageList.filter((url) => url !== null), // Pass the list of signed image URLs to the frontend
   });
 }
 
 export default function Index() {
-  const { resourceList, imageList } = useLoaderData<typeof loader>();
+  const { user, resourceList, imageList } = useLoaderData<typeof loader>();
 
   return (
-    <div style={{ width: "500px", height: "auto", overflow: "hidden" }}>
-      <h1>Welcome to Remix (with Drizzle, Vite, and Cloudflare D1 and R2)</h1>
-      <h2>Image Gallery</h2>
-      <ul>
+    <div className="w-full max-w-[1440px] mx-auto p-8">
+      <Navbar user={user} />
+      <Outlet />
+
+      {/* <ul>
         {imageList.map((url, index) => (
           <li key={index}>
             <img
@@ -91,37 +94,7 @@ export default function Index() {
             />
           </li>
         ))}
-      </ul>
-      <Form method="post" encType="multipart/form-data">
-        <div>
-          <label>
-            Upload Image: <input type="file" name="image" required />
-          </label>
-        </div>
-        <button type="submit">Upload</button>
-      </Form>
-      <ul>
-        {resourceList.map((resource) => (
-          <li key={resource.id}>
-            <a target="_blank" href={resource.href} rel="noreferrer">
-              {resource.title}
-            </a>
-          </li>
-        ))}
-      </ul>
-      <Form method="POST">
-        <div>
-          <label>
-            Title: <input type="text" name="title" required />
-          </label>
-        </div>
-        <div>
-          <label>
-            URL: <input type="url" name="href" required />
-          </label>
-        </div>
-        <button type="submit">Add Resource</button>
-      </Form>
+      </ul> */}
     </div>
   );
 }
