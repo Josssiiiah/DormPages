@@ -1,0 +1,1 @@
+ALTER TABLE owners ADD `image_url` text;

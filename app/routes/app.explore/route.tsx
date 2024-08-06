@@ -1,5 +1,5 @@
 import { Button } from "~/components/ui/button";
-import { useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 
 import profile from "/profile.png";
 import des from "/des.png";
@@ -7,17 +7,43 @@ import nails from "/nails.png";
 import senay from "/senay.png";
 import nyah from "/nyah.png";
 import west from "/west.png";
+import { doTheDbThing } from "lib/dbThing";
+import { json, LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { owners } from "app/drizzle/schema.server";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const S3 = new S3Client({
+  region: "auto",
+  endpoint: `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: "e74dc595a3b18668b5e9f6795929cf3c",
+    secretAccessKey:
+      "b3c68d4ced82ad17a964d22648266c0a0b6fc55d0cf8b5f775e1183b4616b065",
+  },
+});
 
 // Define types
 interface ServiceCardProps {
   title: string;
-  description: string;
-  rating: number;
-  image: string;
-  id: string;
+  description?: string;
+  rating?: number;
+  image?: string;
+  id?: string;
 }
 
 interface ServiceData extends ServiceCardProps {}
+
+type OwnerData = {
+  id: number;
+  name: string;
+  image_url: string | null;
+  signedImageUrl?: string;
+};
 
 // Reusable Card Component
 function ServiceCard({
@@ -38,24 +64,52 @@ function ServiceCard({
       onClick={handleClick}
     >
       <img
-        src={image}
+        src={image || "/default-profile.png"} // Use a default image if no image_url is provided
         alt={title}
         className="w-full h-40 object-cover rounded-t-lg"
       />
       <div className="mt-4">
         <h2 className="text-xl font-bold">{title}</h2>
-        <p className="text-gray-600 mt-2">{description}</p>
-        <div className="flex items-center mt-2">
-          <span className="text-yellow-500">★</span>
-          <span className="ml-1">{rating.toFixed(2)}</span>
-        </div>
+        {description && <p className="text-gray-600 mt-2">{description}</p>}
+        {rating && (
+          <div className="flex items-center mt-2">
+            <span className="text-yellow-500">★</span>
+            <span className="ml-1">{rating.toFixed(2)}</span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+export async function loader({ context }: LoaderFunctionArgs) {
+  const { db } = await doTheDbThing({ context });
+
+  const ownersData = await db.select().from(owners);
+
+  const ownersWithSignedUrls = await Promise.all(
+    ownersData.map(async (owner) => {
+      if (owner.image_url) {
+        const key = owner.image_url.split("/").pop(); // Extract the file name from the URL
+        const signedUrl = await getSignedUrl(
+          S3,
+          new GetObjectCommand({
+            Bucket: "who-profile-pictures",
+            Key: key,
+          }),
+          { expiresIn: 3600 }
+        );
+        return { ...owner, signedImageUrl: signedUrl };
+      }
+      return owner;
+    })
+  );
+
+  return json({ ownersData: ownersWithSignedUrls });
+}
 export default function Explore() {
   const navigate = useNavigate();
+  const { ownersData } = useLoaderData<typeof loader>();
 
   const buttonRoutes: Record<string, string> = {
     All: "/explore/all",
@@ -66,6 +120,8 @@ export default function Explore() {
     "Fix-It": "/explore/fix-it",
   };
 
+  // Commented out servicesData
+  /*
   const servicesData: ServiceData[] = [
     {
       title: "West Campus Cuts",
@@ -108,6 +164,7 @@ export default function Explore() {
       id: "nyah",
     },
   ];
+  */
 
   return (
     <div className="flex flex-col w-full min-h-screen ">
@@ -122,7 +179,6 @@ export default function Explore() {
           <Button
             key={name}
             variant="outline"
-            // onClick={() => handleButtonClick(route)}
             className="px-8 py-6 mb-2 text-md"
           >
             {name}
@@ -132,8 +188,13 @@ export default function Explore() {
       {/* Profile grid  */}
       <div className="w-full flex">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
-          {servicesData.map((service) => (
-            <ServiceCard key={service.id} {...service} />
+          {ownersData.map((owner: OwnerData) => (
+            <ServiceCard
+              key={owner.id}
+              title={owner.name}
+              image={owner.signedImageUrl || owner.image_url || undefined}
+              id={owner.id.toString()}
+            />
           ))}
         </div>
       </div>
