@@ -1,0 +1,1 @@
+ALTER TABLE owners ADD `description` text;

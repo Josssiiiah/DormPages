@@ -4,15 +4,11 @@ import {
   useNavigation,
   useSubmit,
 } from "@remix-run/react";
-import {
-  json,
-} from "@remix-run/cloudflare";
+import { json } from "@remix-run/cloudflare";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import React, { useEffect, useState } from "react";
-import {
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { readFile } from "fs/promises";
 
@@ -27,6 +23,7 @@ interface ServiceCardProps {
   rating?: number;
   image?: string;
   id?: string;
+  images?: string;
 }
 
 interface ServiceData extends ServiceCardProps {}
@@ -51,6 +48,8 @@ const servicesData: ServiceData[] = [
   {
     title: "West Campus Cuts",
     image: "./public/west.png",
+    description:
+      "Your friendly neighborhood barbershop. I've been cutting hair for 3 years now and I specialize in fades, tapers, or lineups. Please come with hair washed and dry. Check out my Calendly to book an appointment!",
   },
   {
     title: "Done by Des",
@@ -237,6 +236,7 @@ export const action = async ({ request, context }: any) => {
   const db = drizzle(context.cloudflare.env.DB);
   const formData = await request.formData();
 
+  ///////// SEED /////////
   if (formData.get("action") === "seed") {
     try {
       for (const service of servicesData) {
@@ -287,6 +287,8 @@ export const action = async ({ request, context }: any) => {
           .values({
             name: service.title,
             image_url: imageUrl,
+            description: service.description,
+            images: service.images,
             // Add other fields as necessary
           })
           .execute();

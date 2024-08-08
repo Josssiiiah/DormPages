@@ -1,3 +1,4 @@
+import { desc } from "drizzle-orm";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 export const resources = sqliteTable("resources", {
@@ -10,6 +11,8 @@ export const owners = sqliteTable("owners", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
   image_url: text("image_url"),
+  description: text("description"),
+  images: text("images"),
 });
 
 export const students = sqliteTable("students", {
@@ -36,3 +39,14 @@ export const session = sqliteTable("session", {
   user_id: text("user_id").notNull(),
   expires_at: integer("expires_at").notNull(),
 });
+
+// Assuming you have an S3 client setup somewhere in your app
+// const S3 = new S3Client({
+//   region: "auto",
+//   endpoint: `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com`,
+//   credentials: {
+//     accessKeyId: "e74dc595a3b18668b5e9f6795929cf3c",
+//     secretAccessKey:
+//       "b3c68d4ced82ad17a964d22648266c0a0b6fc55d0cf8b5f775e1183b4616b065",
+//   },
+// });

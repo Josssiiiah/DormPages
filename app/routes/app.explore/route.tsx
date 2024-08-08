@@ -1,12 +1,5 @@
 import { Button } from "~/components/ui/button";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-
-import profile from "/profile.png";
-import des from "/des.png";
-import nails from "/nails.png";
-import senay from "/senay.png";
-import nyah from "/nyah.png";
-import west from "/west.png";
 import { doTheDbThing } from "lib/dbThing";
 import { json, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { owners } from "app/drizzle/schema.server";
@@ -43,6 +36,7 @@ type OwnerData = {
   name: string;
   image_url: string | null;
   signedImageUrl?: string;
+  description?: string;
 };
 
 // Reusable Card Component
@@ -64,7 +58,7 @@ function ServiceCard({
       onClick={handleClick}
     >
       <img
-        src={image || "/default-profile.png"} // Use a default image if no image_url is provided
+        src={image || "/default-profile.png"}
         alt={title}
         className="w-full h-40 object-cover rounded-t-lg"
       />
@@ -108,7 +102,6 @@ export async function loader({ context }: LoaderFunctionArgs) {
   return json({ ownersData: ownersWithSignedUrls });
 }
 export default function Explore() {
-  const navigate = useNavigate();
   const { ownersData } = useLoaderData<typeof loader>();
 
   const buttonRoutes: Record<string, string> = {
@@ -119,52 +112,6 @@ export default function Explore() {
     Food: "/explore/food",
     "Fix-It": "/explore/fix-it",
   };
-
-  // Commented out servicesData
-  /*
-  const servicesData: ServiceData[] = [
-    {
-      title: "West Campus Cuts",
-      description:
-        "Your friendly neighborhood barbershop. I've been cutting hair for 3 years now and I specialize in fades, tapers, or lineups. Please come with hair washed and dry. Check out my Calendly to book an appointment!",
-      rating: 4.92,
-      image: west,
-      id: "west",
-    },
-    {
-      title: "Done by Des",
-      description:
-        "Redefining hair care at Stanford. Natural styles, Men's Twists, Wig installs, Butterfly Locs, Braid Touch-ups, Loc Retwists, Cornrows, I do it all. Hope to see you soon!",
-      rating: 5.0,
-      image: des,
-      id: "des",
-    },
-    {
-      title: "Nails by Ari",
-      description:
-        "On-campus nail studio specializing in trendy designs, long-lasting gels, and quick touch-ups.",
-      rating: 4.85,
-      image: nails,
-      id: "nails",
-    },
-    {
-      title: "SenayDani.img",
-      description:
-        "Turning my photography hobby into a side hustle. Covering everything from club events to couples' shoots. Known for vibrant edits and chill vibes during sessions.",
-      rating: 4.76,
-      image: senay,
-      id: "senay",
-    },
-    {
-      title: "NyahWitDaNikon",
-      description:
-        "Obsessed with street photography and finding beauty in the everyday. Always have my trusty Nikon on hand.",
-      rating: 4.8,
-      image: nyah,
-      id: "nyah",
-    },
-  ];
-  */
 
   return (
     <div className="flex flex-col w-full min-h-screen ">
@@ -188,14 +135,22 @@ export default function Explore() {
       {/* Profile grid  */}
       <div className="w-full flex">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
-          {ownersData.map((owner: OwnerData) => (
-            <ServiceCard
-              key={owner.id}
-              title={owner.name}
-              image={owner.signedImageUrl || owner.image_url || undefined}
-              id={owner.name}
-            />
-          ))}
+          {ownersData.map(
+            (owner: {
+              description: string | null;
+              id: number;
+              name: string;
+              image_url: string | null;
+              signedImageUrl?: string;
+            }) => (
+              <ServiceCard
+                key={owner.id}
+                title={owner.name}
+                image={owner.signedImageUrl || owner.image_url || undefined}
+                id={owner.name}
+              />
+            )
+          )}
         </div>
       </div>
     </div>
