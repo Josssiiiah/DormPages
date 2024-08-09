@@ -75,7 +75,7 @@ export default function Profile() {
         {/* <Button onClick={handleClick} className="mb-4 w-12 text-center ml-24 mt-6">
          <FaArrowLeft className="" />
        </Button> */}
-     <div className="w-full flex flex-col px-24 pt-6 relative">
+     <div className="w-full flex flex-col px-24 pt-12 relative">
    
        <div className="flex flex-row justify-between">
          <div className="border border-black w-64 h-48">

@@ -9,7 +9,7 @@ export function Navbar({ user }: any) {
   };
   return (
     <div className="flex flex-row justify-between pt-8 w-full">
-      <Link to="/">
+      <Link to="/app/explore">
         <h2 className="font-bold text-lg">DormPages</h2>
       </Link>{" "}
       <div className="space-x-4">

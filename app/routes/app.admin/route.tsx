@@ -54,18 +54,26 @@ const servicesData: ServiceData[] = [
   {
     title: "Done by Des",
     image: "./public/des.png",
+    description:
+      "Elevate your style with Done by Des. Specializing in custom designs and precision cuts, I bring your hair visions to life. With 5 years of experience, I offer a range of services from classic styles to trendy looks. Book now for a transformative experience!",
   },
   {
     title: "Nails by Ari",
     image: "./public/nails.png",
+    description:
+      "Express yourself through your nails with Ari's artistic touch. From classic manicures to intricate nail art, I've got you covered. With 4 years in the industry, I use only premium products for long-lasting results. Schedule your pampering session today!",
   },
   {
     title: "SenayDani.img",
     image: "./public/senay.png",
+    description:
+      "Capture life's precious moments with SenayDani.img. As a passionate photographer with 6 years of experience, I specialize in portraits, events, and lifestyle shoots. Let's create stunning visuals that tell your unique story. Book a session and let's get snappin'!",
   },
   {
     title: "NyahWitDaNikon",
     image: "./public/nyah.png",
+    description:
+      "Turn your memories into art with NyahWitDaNikon. With my trusty Nikon and 7 years behind the lens, I offer a fresh perspective on photography. Specializing in street, fashion, and documentary styles. Ready to see life through my viewfinder? Let's connect and create!",
   },
 ];
 
@@ -115,7 +123,12 @@ export default function Admin() {
           title: "Success",
           description: actionData.message,
         });
-      } else if ("status" in actionData && actionData.status === 500) {
+      } else if ("status" in actionData && actionData.status === 202) {
+        toast({
+          title: "Success",
+          description: actionData.message,
+        });
+      }else if ("status" in actionData && actionData.status === 500) {
         toast({
           title: "Error",
           description: actionData.message,
@@ -294,7 +307,7 @@ export const action = async ({ request, context }: any) => {
           .execute();
       }
       return json(
-        { message: "Database seeded successfully", status: 201 },
+        { message: "Database seeded", status: 201 },
         { status: 201 }
       );
     } catch (error) {
@@ -313,7 +326,7 @@ export const action = async ({ request, context }: any) => {
     await db.delete(owners);
 
     console.log("Database cleared");
-    return json({ message: "Database cleared" }, { status: 200 });
+    return json({ message: "Database cleared", status: 202 }, { status: 202 });
   }
 
   const fileName = formData.get("fileName");
@@ -376,7 +389,7 @@ export const action = async ({ request, context }: any) => {
       .execute();
 
     return json(
-      { message: "Image uploaded to S3 successfully", status: 201 },
+      { message: "Image uploaded to S3 successfully", status: 203 },
       { status: 201 }
     );
   }
