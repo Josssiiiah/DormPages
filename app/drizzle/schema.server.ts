@@ -9,10 +9,16 @@ export const resources = sqliteTable("resources", {
 
 export const owners = sqliteTable("owners", {
   id: integer("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   image_url: text("image_url"),
   description: text("description"),
   images: text("images"),
+});
+
+export const owner_images = sqliteTable("owner_images", {
+  id: integer("id").primaryKey(),
+  owner_name: text("owner_name").notNull().references(() => owners.name),
+  image_url: text("image_url").notNull(),
 });
 
 export const students = sqliteTable("students", {

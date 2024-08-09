@@ -14,7 +14,7 @@ import { readFile } from "fs/promises";
 
 import { useToast } from "~/components/ui/use-toast";
 import { drizzle } from "drizzle-orm/d1";
-import { owners } from "app/drizzle/schema.server";
+import { owners, owner_images } from "app/drizzle/schema.server";
 import path from "path";
 
 interface ServiceCardProps {
@@ -23,7 +23,7 @@ interface ServiceCardProps {
   rating?: number;
   image?: string;
   id?: string;
-  images?: string;
+  images?: string[];
 }
 
 interface ServiceData extends ServiceCardProps {}
@@ -50,34 +50,38 @@ const servicesData: ServiceData[] = [
     image: "./public/west.png",
     description:
       "Your friendly neighborhood barbershop. I've been cutting hair for 3 years now and I specialize in fades, tapers, or lineups. Please come with hair washed and dry. Check out my Calendly to book an appointment!",
-  },
+      images: ["./public/west.png", "./public/des.png", "./public/nails.png"],
+    },
   {
     title: "Done by Des",
     image: "./public/des.png",
     description:
       "Elevate your style with Done by Des. Specializing in custom designs and precision cuts, I bring your hair visions to life. With 5 years of experience, I offer a range of services from classic styles to trendy looks. Book now for a transformative experience!",
+    images: ["./public/west.png", "./public/des.png", "./public/nails.png"],
   },
   {
     title: "Nails by Ari",
     image: "./public/nails.png",
     description:
       "Express yourself through your nails with Ari's artistic touch. From classic manicures to intricate nail art, I've got you covered. With 4 years in the industry, I use only premium products for long-lasting results. Schedule your pampering session today!",
+    images: ["./public/west.png", "./public/des.png", "./public/nails.png"],
   },
   {
     title: "SenayDani.img",
     image: "./public/senay.png",
     description:
       "Capture life's precious moments with SenayDani.img. As a passionate photographer with 6 years of experience, I specialize in portraits, events, and lifestyle shoots. Let's create stunning visuals that tell your unique story. Book a session and let's get snappin'!",
+    images: ["./public/west.png", "./public/des.png", "./public/nails.png"],
   },
   {
     title: "NyahWitDaNikon",
     image: "./public/nyah.png",
     description:
       "Turn your memories into art with NyahWitDaNikon. With my trusty Nikon and 7 years behind the lens, I offer a fresh perspective on photography. Specializing in street, fashion, and documentary styles. Ready to see life through my viewfinder? Let's connect and create!",
+    images: ["./public/west.png", "./public/des.png", "./public/nails.png"],
   },
 ];
 
-// Function to generate a unique name for the photo
 const generateUniqueFileName = (originalName: string) => {
   const timestamp = Date.now();
   const extension = originalName.split(".").pop();
@@ -249,12 +253,10 @@ export const action = async ({ request, context }: any) => {
   const db = drizzle(context.cloudflare.env.DB);
   const formData = await request.formData();
 
-  ///////// SEED /////////
   if (formData.get("action") === "seed") {
     try {
       for (const service of servicesData) {
         const file = await getFileFromPath(service.image);
-        // Generate a unique filename
         let fileName = generateUniqueFileName(file.name);
         let imageUrl = `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com/who-profile-pictures/${fileName}`;
 
@@ -263,8 +265,7 @@ export const action = async ({ request, context }: any) => {
           const fileType = file.type;
           const fileSize = file.size;
 
-          // Validate file size and type
-          const maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
+          const maxFileSizeInBytes = 10 * 1024 * 1024;
           if (fileSize > maxFileSizeInBytes) {
             throw new Error("File size exceeds the allowed limit");
           }
@@ -290,9 +291,7 @@ export const action = async ({ request, context }: any) => {
             console.log(progress);
           });
 
-          console.log("Before");
           await upload.done();
-          console.log("Upload complete");
         }
 
         await db
@@ -301,15 +300,45 @@ export const action = async ({ request, context }: any) => {
             name: service.title,
             image_url: imageUrl,
             description: service.description,
-            images: service.images,
-            // Add other fields as necessary
           })
           .execute();
+
+        // Upload additional images to owner_images table
+        if (service.images) {
+          for (const imagePath of service.images) {
+            const imageFile = await getFileFromPath(imagePath);
+            let imageFileName = generateUniqueFileName(imageFile.name);
+            let additionalImageUrl = `https://bbe111b6726945b110b32ab037e4c232.r2.cloudflarestorage.com/who-profile-pictures/${imageFileName}`;
+
+            if (imageFile instanceof File) {
+              const imageFileStream = imageFile.stream();
+              const imageFileType = imageFile.type;
+
+              const imageUpload = new Upload({
+                client: S3,
+                params: {
+                  Bucket: "who-profile-pictures",
+                  Key: imageFileName as string,
+                  Body: imageFileStream,
+                  ContentType: imageFileType,
+                },
+                queueSize: 6,
+              });
+
+              await imageUpload.done();
+
+              await db
+                .insert(owner_images)
+                .values({
+                  owner_name: service.title,
+                  image_url: additionalImageUrl,
+                })
+                .execute();
+            }
+          }
+        }
       }
-      return json(
-        { message: "Database seeded", status: 201 },
-        { status: 201 }
-      );
+      return json({ message: "Database seeded", status: 201 }, { status: 201 });
     } catch (error) {
       console.error("Failed to seed database", error);
       return json(
@@ -319,11 +348,11 @@ export const action = async ({ request, context }: any) => {
     }
   }
 
-  // Check if the clear action has been triggered
   if (formData.get("action") === "clear") {
-    // Perform database clear operation
     console.log("deleting database sensei...");
+    await db.delete(owner_images);
     await db.delete(owners);
+    
 
     console.log("Database cleared");
     return json({ message: "Database cleared", status: 202 }, { status: 202 });
@@ -342,8 +371,7 @@ export const action = async ({ request, context }: any) => {
       const fileType = file.type;
       const fileSize = file.size;
 
-      // Validate file size and type
-      const maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
+      const maxFileSizeInBytes = 10 * 1024 * 1024;
       if (fileSize > maxFileSizeInBytes) {
         throw new Error("File size exceeds the allowed limit");
       }
@@ -382,9 +410,8 @@ export const action = async ({ request, context }: any) => {
       .insert(owners)
       .values({
         name: name as string,
-        // category: category as string,
-        // description: description as string,
         image_url: imageUrl,
+        description: description as string,
       })
       .execute();
 

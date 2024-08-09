@@ -22,12 +22,11 @@ export default function Index() {
       </div>
 
       <div className="w-full max-w-8xl text-center space-y-6 sm:pt-20">
-        <h1 className="text-4xl sm:text-6xl font-bold">
-          Step into the Stanford gig economy.
+        <h1 className="text-4xl sm:text-5xl font-bold">
+          Discover small businesses on Stanford's campus.
         </h1>
         <p className="text-gray-600 text-sm sm:text-2xl">
-          Discover student-led small businesses, from haircuts, to photography
-          and everything in between
+          Explore, support, and be inspired by passionate student entrepreneurs
         </p>
       </div>
 

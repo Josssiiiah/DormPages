@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `owners_name_unique` ON `owners` (`name`);
